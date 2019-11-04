@@ -8,12 +8,8 @@ const dataFormattingRules = {
 };
 
 module.exports = {
-	create: function({student_id, class_id, date, didAttend}){
-		let config = paramValues;
-
-		config["ID"] = 'uuid_generate_v4()';
-
-		return api.create('public."Journal Entries"', config, dataFormattingRules)
+	create: function(paramValues){
+		return api.create('public."Journal Entries"', paramValues, dataFormattingRules, 'ID')
 		.then((res) => res.rows[0]);
 	},
 	update: function(id, properties){

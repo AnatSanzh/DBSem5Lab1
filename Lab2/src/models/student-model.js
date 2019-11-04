@@ -10,12 +10,8 @@ const dataFormattingRules = {
 };
 
 module.exports = {
-	create: function({name, password, privileges, lastLocation, lastLocationTime, group_id}){
-		let config = paramValues;
-
-		config["Student_ID"] = 'uuid_generate_v4()';
-
-		return api.create('public."Students"', config, dataFormattingRules)
+	create: function(paramValues){
+		return api.create('public."Students"', paramValues, dataFormattingRules, 'Student_ID')
 		.then((res) => res.rows[0]);
 	},
 	update: function(id, properties){

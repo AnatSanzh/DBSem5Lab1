@@ -6,13 +6,8 @@ const dataFormattingRules = {
 };
 
 module.exports = {
-	create: function({name, faculty}){
-		let config = paramValues;
-
-		config["ID"] = 'uuid_generate_v4()';
-
-		return api.create('public."Groups"', config, dataFormattingRules)
-		.then((res) => res.rows[0]);
+	create: function(paramValues){
+		return api.create('public."Groups"', paramValues, dataFormattingRules, 'ID');
 	},
 	update: function(id, properties){
 		return api.update('public."Groups"', properties, dataFormattingRules, {}, 'ID', id);

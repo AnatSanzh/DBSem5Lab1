@@ -13,7 +13,7 @@ pool.connect().then(() => pool.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"
 
 module.exports = {
 	query: (queryText, paramArr = undefined) => new Promise((res, rej) => {
-		//console.log(queryText);
+		console.log(queryText);
 
 		pool.query(queryText, paramArr, (err, result) => {
 			if(err){

@@ -8,7 +8,7 @@ const _timestampConvertor = x => dateConvertor(x) + " " + padLeft(x.getHours())+
 const emptyFunction = async function(){};
 
 
-function api_create(tableName, dataObject, dataFormattingRules){
+function api_create(tableName, dataObject, dataFormattingRules, keyName){
 	/*let paramStr = "$1", paramCount = Object.keys(dataObject).length;
 
 		for (var i = 2; i <= paramCount; i++) {
@@ -19,10 +19,16 @@ function api_create(tableName, dataObject, dataFormattingRules){
 			Object.keys(dataObject).map( x => '"'+x+'"' ).join()+') VALUES ('+
 			paramStr+') RETURNING *;', Object.values(dataObject)
 		);*/
-		return query('INSERT INTO '+tableName+' ('+
-			Object.keys(dataObject).map( x => '"'+x+'"' ).join()+') VALUES ('+
-			Object.entries(dataObject).map( ([x,y]) => dataFormattingRules[x](y) ).join()+') RETURNING *;'
-		).then( res => res.rows );
+
+		let valueNames = Object.keys(dataObject).map( x => '"'+x+'"' );
+		valueNames.unshift('"'+keyName+'"');
+
+		let values = Object.entries(dataObject).map( ([key, value]) => dataFormattingRules[key](value) );
+		values.unshift('uuid_generate_v4()');
+
+		return query('INSERT INTO '+tableName+' ('+valueNames.join()+') VALUES ('+
+			values.join()+') RETURNING *;'
+		);
 }
 
 const dateConvertor = x => "'" + _dateConvertor(x) + "'";
@@ -92,7 +98,7 @@ const enumeration_filter = (_source, _enumParam, _enumValues) =>
 	`SELECT * FROM (${_source}) t WHERE t."${_enumParam}" IN (${_enumValues.join()})`;
 
 const ref_table_filter = (_source, _sourceProp, _source2, _source2Prop) => 
-	`SELECT * FROM (${_source1}) t1 WHERE EXISTS(SELECT "${_source2Prop}" FROM ((${_source2}) t2 WHERE t1."${_sourceProp}"=t2."${_source2Prop}" ))`;
+	`SELECT * FROM (${_source}) t1 WHERE EXISTS(SELECT "${_source2Prop}" FROM (${_source2}) t2 WHERE t1."${_sourceProp}"=t2."${_source2Prop}" )`;
 
 function parse_filters(tableName, filters){
 	let filterQuery = `SELECT * FROM ${tableName}`;
