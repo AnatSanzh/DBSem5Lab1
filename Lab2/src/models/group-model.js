@@ -1,38 +1,48 @@
 const api = require('./api');
 
+const dataFormattingRules = {
+	Name: api.stringConvertor,
+	Faculty: api.stringConvertor
+};
 
-module.exports = class GroupModel{
-	constructor(id, name, password){
-		this.id = id;
-		this.name = name;
-		this.password = password;
-	}
-	static create(name, faculty){
-		const config = {
-			ID: 'uuid_generate_v4()',
-			Name: name,
-			Faculty: faculty
-		};
+module.exports = {
+	create: function({name, faculty}){
+		let config = paramValues;
 
-		return api.create('public."Groups"',config).then((res) => new TeacherModel(0,name,password));
-	}
-	static update(id, name, password){
-		return api.update('public."Teachers"',{ Name: name, Password: password }, 'ID',id)
-		.then((res) => new TeacherModel(0,name,password));
-	}
-	static delete(id){
-		return api.delete('public."Teachers"','ID',id);
-	}
-	static get(id){
-		return api.get('public."Teachers"', 'ID', id).then((res) =>{
-			var data = res.rows[0];
+		config["ID"] = 'uuid_generate_v4()';
 
-			return new TeacherModel(id,data['Name'],data['Password']);
-		});
-	}
-	static list(){
-		return api.list('public."Teachers"', 'ID', {}).then((res) =>{
-			return res.rows.map( data => new TeacherModel(data['ID'],data['Name'],data['Password']));
-		});
-	}
+		return api.create('public."Groups"', config, dataFormattingRules)
+		.then((res) => res.rows[0]);
+	},
+	update: function(id, properties){
+		return api.update('public."Groups"', properties, dataFormattingRules, {}, 'ID', id);
+	},
+	delete: function(id){
+		return api.delete('public."Groups"', 'ID', id).then(
+			() => api.delete('public."TheClasses"', 'ID', id)
+		).then(
+			() => api.nullifyReferers('public."Students"', 'Group_ID', id)
+		);
+	},
+	get: function(id){
+		return api.get('public."Groups"', 'ID', id).then((res) => res.rows[0]);
+	},
+	list: function(filters){
+		return api.list('public."Groups"', 'ID', filters).then((res) => res.rows);
+	},
+	toString: () => "Group",
+	getProperties: () => ["Name", "Faculty"],
+	getPropertyTypes: () => ["string", "string"],
+	getReferences: () => [
+		{ // from class
+			paramSource: "ID",
+			paramRef: "Group ID",
+			refTableName: "public.\"TheClasses\""
+		},
+		{ // from student
+			paramSource: "ID",
+			paramRef: "Group_ID",
+			refTableName: "public.\"Students\""
+		},
+	],
 };

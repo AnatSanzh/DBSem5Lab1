@@ -1,42 +1,50 @@
 const api = require('./api');
 
+const dataFormattingRules = {
+	Name: api.stringConvertor,
+	Password: api.stringConvertor,
+	Privileges: api.booleanConvertor,
+	Group_ID: api.uuidConvertor,
+	"Last Location": api.pointConvertor,
+	"Last Location Time": api.timestampConvertor					// Timestamp(0) without timezone
+};
 
-module.exports = class StudentModel{
-	constructor(id, name, password){
-		this.id = id;
-		this.name = name;
-		this.password = password;
-	}
-	static create(name, password, privileges, lastLocation, lastLocationTime, group_id){
-		const config = {
-			Student_ID: 'uuid_generate_v4()',
-			Name: name,
-			Password: password,
-			Privileges: privileges,
-			Group_ID: group_id,
-			"Last Location": lastLocation,
-			"Last Location Time": lastLocationTime
-		};
+module.exports = {
+	create: function({name, password, privileges, lastLocation, lastLocationTime, group_id}){
+		let config = paramValues;
 
-		return api.create('public."Students"',config).then((res) => new TeacherModel(0,name,password));
-	}
-	static update(id, name, password){
-		return api.update('public."Teachers"',{ Name: name, Password: password }, 'ID',id)
-		.then((res) => new TeacherModel(0,name,password));
-	}
-	static delete(id){
-		return api.delete('public."Teachers"','ID',id);
-	}
-	static get(id){
-		return api.get('public."Teachers"', 'ID', id).then((res) =>{
-			var data = res.rows[0];
+		config["Student_ID"] = 'uuid_generate_v4()';
 
-			return new TeacherModel(id,data['Name'],data['Password']);
-		});
-	}
-	static list(){
-		return api.list('public."Teachers"', 'ID', {}).then((res) =>{
-			return res.rows.map( data => new TeacherModel(data['ID'],data['Name'],data['Password']));
-		});
-	}
+		return api.create('public."Students"', config, dataFormattingRules)
+		.then((res) => res.rows[0]);
+	},
+	update: function(id, properties){
+		return api.update('public."Students"', properties, dataFormattingRules, { }, 'Student_ID', id);
+	},
+	delete: function(id){
+		return api.delete('public."Students"', 'Student_ID', id).then(
+			() => api.delete('public."Journal Entries"', 'Student_ID', id)
+		);
+	},
+	get: function(id){
+		return api.get('public."Students"', 'Student_ID', id).then((res) => res.rows[0]);
+	},
+	list: function(filters){
+		return api.list('public."Students"', 'Student_ID', filters).then((res) => res.rows);
+	},
+	toString: () => "Student",
+	getProperties: () => ["Name", "Password", "Privileges", "Last Location", "Last Location Time", "Group_ID"],
+	getPropertyTypes: () => ["string", "string", "boolean", "point", "timestamp without timezone", "uuid"],
+	getReferences: () => [
+		{
+			paramSource: "Group_ID",
+			paramRef: "ID",
+			refTableName: "public.\"Groups\""
+		},
+		{ // from journal entry
+			paramSource: "ID",
+			paramRef: "Student_ID",
+			refTableName: "public.\"Journal Entries\""
+		},
+	],
 };

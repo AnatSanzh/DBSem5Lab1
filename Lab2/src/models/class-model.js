@@ -1,44 +1,52 @@
 const api = require('./api');
 
+const dataFormattingRules = {
+	Name: api.stringConvertor,			// string
+	Time: api.numberConvertor,			// integer
+	Location: api.pointConvertor,		// point
+	"Teacher ID": api.uuidConvertor,	// uuid
+	"Group ID": api.uuidConvertor		// uuid
+};
 
-module.exports = class ClassModel{
-	constructor(id, name, time, location, teacher_id, group_id){
-		this.id = id;
-		this.name = name;
-		this.time = time;
-		this.location = location;
-		this.teacher_id = teacher_id;
-		this.group_id = group_id;
-	}
-	static create(name, time, location, teacher_id, group_id){
-		const config = {
-			ID: 'uuid_generate_v4()',
-			Name: name,
-			Time: time,
-			Location: location,
-			"Teacher ID": teacher_id,
-			"Group ID": group_id
-		};
+module.exports = {
+	create: function(paramValues){
+		let config = paramValues;
 
-		return api.create('public."TheClasses"',config).then((res) => new TeacherModel(0,name,password));
-	}
-	static update(id, name, password){
-		return api.update('public."Teachers"',{ Name: name, Password: password }, 'ID',id)
-		.then((res) => new TeacherModel(0,name,password));
-	}
-	static delete(id){
-		return api.delete('public."Teachers"','ID',id);
-	}
-	static get(id){
-		return api.get('public."Teachers"', 'ID', id).then((res) =>{
-			var data = res.rows[0];
+		config["ID"] = 'uuid_generate_v4()';
 
-			return new TeacherModel(id,data['Name'],data['Password']);
-		});
-	}
-	static list(){
-		return api.list('public."Teachers"', 'ID', {}).then((res) =>{
-			return res.rows.map( data => new TeacherModel(data['ID'],data['Name'],data['Password']));
-		});
-	}
+		return api.create('public."TheClasses"', config, dataFormattingRules)
+		.then((res) => res.rows[0]);
+	},
+	update: function(id, properties){
+		return api.update('public."TheClasses"', properties, dataFormattingRules, {}, 'ID', id);
+	},
+	delete: function(id){
+		return api.delete('public."TheClasses"', 'ID', id);
+	},
+	get: function(id){
+		return api.get('public."TheClasses"', 'ID', id).then((res) => res.rows[0]);
+	},
+	list: function(filters){
+		return api.list('public."TheClasses"', 'ID', filters).then((res) => res.rows);
+	},
+	toString: () => "Class",
+	getProperties: () => ["Name", "Time", "Location", "Teacher ID", "Group ID"],
+	getPropertyTypes: () => ["string", "integer", "point", "uuid", "uuid"],
+	getReferences: () => [
+		{
+			paramSource: "Teacher ID",
+			paramRef: "ID",
+			refTableName: "public.\"Teachers\""
+		},
+		{
+			paramSource: "Group ID",
+			paramRef: "ID",
+			refTableName: "public.\"Groups\""
+		},
+		{ // from journal entry
+			paramSource: "ID",
+			paramRef: "Class_ID",
+			refTableName: "public.\"Journal Entries\""
+		},
+	],
 };

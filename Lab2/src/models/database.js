@@ -1,4 +1,5 @@
 const { Pool } = require('pg');
+const prompt = require('../utils/prompt');
 
 const pool = new Pool({
 	user: 'postgres',
@@ -8,18 +9,19 @@ const pool = new Pool({
 	port: 5432
 });
 
-pool.connect().then(()=> pool.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'));
+pool.connect().then(() => pool.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'));
 
 module.exports = {
-	query: (queryText) => new Promise((res,rej) => {
-		console.log(queryText);
+	query: (queryText, paramArr = undefined) => new Promise((res, rej) => {
+		//console.log(queryText);
 
-		pool.query(queryText,(err, result)=>{
+		pool.query(queryText, paramArr, (err, result) => {
 			if(err){
 				rej(err);
 			}else{
 				res(result);
+				//prompt("enter enter").then(() => res(result));
 			}
-		})
+		});
 	})
 };
