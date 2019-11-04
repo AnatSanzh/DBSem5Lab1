@@ -87,21 +87,21 @@ module.exports = function(model) {
 
 					let filter = { id: filterType };
 
-					if(input == "text"){
+					if(filterType == "text"){
 						filter.param = await prompt(ident + "Parameter name: ");
 
 						if(fields.indexOf(filter.param)<0)
 							break;
 
 						filter.paramValue = await prompt(ident + "Filtering text: ");
-					}else if(input == "notext"){
+					}else if(filterType == "notext"){
 						filter.param = await prompt(ident + "Parameter name: ");
 
 						if(fields.indexOf(filter.param)<0)
 							break;
 						
 						filter.paramValue = await prompt(ident + "Filtering text: ");
-					}else if(input == "range"){
+					}else if(filterType == "range"){
 						filter.param = await prompt(ident + "Prameter name: ");
 
 						if(fields.indexOf(filter.param)<0)
@@ -109,7 +109,7 @@ module.exports = function(model) {
 
 						filter.rangeStart = await prompt(ident + "Range start: ");
 						filter.rangeEnd = await prompt(ident + "Range end: ");
-					}else if(input == "enum"){
+					}else if(filterType == "enum"){
 						filter.param = await prompt(ident + "Parameter name: ");
 
 						const typeId = fields.indexOf(filter.param);
@@ -131,7 +131,7 @@ module.exports = function(model) {
 						}
 
 						filter.paramValues = values;
-					}else if(input == "depend"){
+					}else if(filterType == "depend"){
 						const references = model.getReferences();
 
 						let text = "Table to associate with:\n";
@@ -150,7 +150,7 @@ module.exports = function(model) {
 
 						filter.paramSource = selectedReference.paramSource;
 						filter.refTableName = selectedReference.refTableName;
-						filter.refFilters = self(self, identation+1);
+						filter.refFilters = await self(self, identation+1);
 						filter.paramRef = selectedReference.paramRef;
 					}else{
 						break;
@@ -167,7 +167,7 @@ module.exports = function(model) {
 				params: {
 					path: '/view-list',
 					params: {
-						filters: filterCollectionFunction(filterCollectionFunction, 0),
+						filters: await filterCollectionFunction(filterCollectionFunction, 0),
 						model
 					}
 				}
