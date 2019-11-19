@@ -326,25 +326,21 @@ module.exports = {
 
 ### Процес внесення даних та його результат
 
-![insert](img/inserting.png)
+![insert](img/insert1.png)
 
-![insert](img/insert_result.png)
-
-![insert](img/after_insert.png)
+![insert](img/insert2.png)
 
 ### Процес редагування, результат операцій
 
-![update](img/updating.png)
+![update](img/update1.png)
 
-![update](img/update_result.png)
+![update](img/update2.png)
 
 ### Процес вилучення даних, результат операцій
 
-![delete](img/deleting.png)
+![delete](img/delete1.png)
 
-![delete](img/delete_result.png)
-
-![list](img/list_all.png)
+![delete](img/delete2.png)
 
 ## Лістинг модуля «модель» згідно із шаблоном MVC
 
@@ -399,35 +395,3 @@ module.exports = {
 	],
 };
 ```
-
-## Скріншоти результатів виконання операції вилучення запису батьківської таблиці та виведення вмісту дочірньої таблиці після цього вилучення, а якщо воно неможливе, то результат перехоплення помилки з виведенням повідомлення про неможливість видалення за наявності залежних даних
-
-Список накладних:
-
-![invoices](img/invoices_list.png)
-
-Список товарів:
-
-![goods](img/goods_list.png)
-
-Як бачимо, тільки накладна №4 немає товарів
-
-Видалимо цю накладну:
-
-![invoice delete](img/invoice_delete.png)
-
-Як бачимо результат успішний:
-
-![operation delete invoice result](img/invoice_success.png)
-
-Спробуємо видалити іншу накладну:
-
-![invoice delete another](img/invoice_another_delete.png)
-
-Отримуємо помилку:
-
-![invoice delete error](img/invoice_error.png)
-
-Список накладних після зроблених операцій:
-
-![invoice list after all](img/invoice_list_after.png)
