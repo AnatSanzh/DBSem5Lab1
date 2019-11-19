@@ -19,7 +19,7 @@ const controllers = {
 	
 	'/class' : new Controller(globalRouter, ModelMenuGenerator(classModel), classModel),
 	'/group' : new Controller(globalRouter, ModelMenuGenerator(groupModel), groupModel),
-	'/journal-entry' : new Controller(globalRouter, ModelMenuGenerator(journalEntryModel), journalEntryModel),
+	'/journal entry' : new Controller(globalRouter, ModelMenuGenerator(journalEntryModel), journalEntryModel),
 	'/student' : new Controller(globalRouter, ModelMenuGenerator(studentModel), studentModel),
 	'/teacher' : new Controller(globalRouter, ModelMenuGenerator(teacherModel), teacherModel),
 	

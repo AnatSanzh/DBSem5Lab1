@@ -1,6 +1,7 @@
 const prompt = require('../utils/prompt');
 const api = require('../models/api');
 const { fromKeys } = require('../utils/object-utils');
+const modelNameDict = require('../models/model-dict');
 
 if (!String.prototype.format) {
   String.prototype.format = function() {
@@ -74,13 +75,13 @@ module.exports = function(model) {
 			};
 		},
 		async function(){
-			const filterCollectionFunction = async function(self, identation) {
+			const filterCollectionFunction = async function(self, identation, _model) {
 				const filters = [];
 
 				const ident = "    ".repeat(identation);
 
-				const types = model.getPropertyTypes();
-				const fields = model.getProperties();
+				const types = _model.getPropertyTypes();
+				const fields = _model.getProperties();
 
 				while(true){
 					const filterType = await prompt(ident + "Filter to apply(text,notext,range,enum,depend): ");
@@ -132,7 +133,7 @@ module.exports = function(model) {
 
 						filter.paramValues = values;
 					}else if(filterType == "depend"){
-						const references = model.getReferences();
+						const references = _model.getReferences();
 
 						let text = "Table to associate with:\n";
 
@@ -150,7 +151,7 @@ module.exports = function(model) {
 
 						filter.paramSource = selectedReference.paramSource;
 						filter.refTableName = selectedReference.refTableName;
-						filter.refFilters = await self(self, identation+1);
+						filter.refFilters = await self(self, identation+1, modelNameDict[selectedReference.refTableName]);
 						filter.paramRef = selectedReference.paramRef;
 					}else{
 						break;
@@ -167,7 +168,7 @@ module.exports = function(model) {
 				params: {
 					path: '/view-list',
 					params: {
-						filters: await filterCollectionFunction(filterCollectionFunction, 0),
+						filters: await filterCollectionFunction(filterCollectionFunction, 0, model),
 						model
 					}
 				}

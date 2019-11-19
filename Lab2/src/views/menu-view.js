@@ -15,7 +15,7 @@ const options = [
 	{ id: 'navigate', params: { path: '/group', params: {} } },
 	{ id: 'navigate', params: { path: '/student', params: {} } },
 	{ id: 'navigate', params: { path: '/teacher', params: {} } },
-	{ id: 'navigate', params: { path: '/journal-entry', params: {} } },
+	{ id: 'navigate', params: { path: '/journal entry', params: {} } },
 	{ id: 'navigate', params: { path: '/class', params: {} } },
 	{ id: 'exit' }
 ];
