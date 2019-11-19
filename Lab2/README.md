@@ -6,11 +6,7 @@
 Повнотекстовий пошук: слово не входить, обов’язкове входження слова.
 ## Нормалізована модель даних
 
-У порівнянні з попередньої лабораторною роботою, було стоврено відношення `cities`,
-при приведення відношення `warehouses` до 1НФ: а саме, ключ `address` було поділено
-на атомарні частини: місто, та назву вулиці з номером будинку.
-
-Тому у відношеннях зберігаються атомарні дані, у якості `primary key` всюди виступає
+У відношеннях зберігаються атомарні дані, у якості `primary key` всюди виступає
 лише один атрибут, та транзитивних залежностей другорядних атрибутів від первинних
 не знайдено. А отже розроблена БД цілком перебуває у 3НФ.
 
@@ -125,89 +121,207 @@ WITH (
 TABLESPACE pg_default;
 ```
 
-## Лістинги програм з директивами внесення, редагування та вилучення даних у базі даних та результати виконання цих директив
+## Лістинги програм з директивами внесення, редагування, вилучення та пошуку даних у базі даних та результати виконання цих директив
 
-`controller/__init__.py`
+`models/api.js`
 
-```python
-class BaseController(ABC):
-    def __init__(self, model: BaseModel, view: BaseView):
-        self.__model = model
-        self.__view = view
-        self._cb_show_prev_state = None
+```javascript
+const { query } = require('./database');
 
-    def show(self, pk: int = None):
-        pk_not_specified = pk is None
-        if pk_not_specified:
-            pk = self.__view.get_item_pk('Reading')
-        try:
-            if isinstance(pk, str):
-                pk = int(pk)
-            item = self.__model.read(pk)
-            self.__view.show_item(item)
-        except (Exception, psycopg2.Error) as e:
-            exception_handler(e, self.__model.rollback)
-            self.__view.show_error(str(e))
-        finally:
-            if pk_not_specified:
-                self.choose_operation()
-            else:
-                self.show_all()
+const padLeft = srcStr => srcStr.length === 1 ? "0" + srcStr : srcStr;
 
-    def insert(self):
-        input_items = self.__get_input_items_form(self._prompt_values_for_input())
-        command = self.__view.show_input_item_form(input_items, 'Create')
-        if command == ConsoleCommands.GO_BACK:
-            return self.choose_operation()
-        if command == ConsoleCommands.CONFIRM:
-            try:
-                pk_name = self.__model.primary_key_name
-                item = self.__model.create(self._create_obj_from_input(input_items))
-                self.__view.show_created_item(item, pk_name)
-            except (Exception, psycopg2.Error) as e:
-                exception_handler(e, self.__model.rollback)
-                self.__view.show_error(str(e))
-            finally:
-                self.choose_operation()
+const _dateConvertor = x => x.getFullYear()+"-"+padLeft(x.getMonth().toString())+"-"+padLeft(x.getDate().toString());
+const _timestampConvertor = x => dateConvertor(x) + " " + padLeft(x.getHours())+":"+padLeft(x.getMinutes())+":"+padLeft(x.getSeconds());
 
-    def update(self):
-        pk = self.__view.get_item_pk('Updating')
-        try:
-            if isinstance(pk, str):
-                pk = int(pk)
-            item = self.__model.read(pk)
-            input_items = self.__get_input_items_form(self._prompt_values_for_input(item, True))
-            command = self.__view.show_input_item_form(input_items, 'Update')
-            if command == ConsoleCommands.GO_BACK:
-                return self.choose_operation()
-            if command == ConsoleCommands.CONFIRM:
-                new_item = self._create_obj_from_input(input_items)
-                pk_name = self.__model.primary_key_name
-                setattr(new_item, pk_name, getattr(item, pk_name))
-                self.__model.update(new_item)
-                self.__view.show_updated_item(item, new_item)
-        except (Exception, psycopg2.Error) as e:
-            exception_handler(e, self.__model.rollback)
-            self.__view.show_error(str(e))
-        finally:
-            self.choose_operation()
+const emptyFunction = async function(){};
 
-    def delete(self):
-        pk = self.__view.get_item_pk('Deleting')
-        try:
-            if isinstance(pk, str):
-                pk = int(pk)
-            item = self.__model.read(pk)
-            confirm = self.__view.confirm_deleting_form(item)
-            if confirm.strip().lower() != "yes":
-                return self.choose_operation()
-            self.__model.delete(pk)
-            self.__view.show_success(f"An item {item} was successfully deleted")
-        except (Exception, psycopg2.Error) as e:
-            exception_handler(e, self.__model.rollback)
-            self.__view.show_error(str(e))
-        finally:
-            self.choose_operation()
+
+function api_create(tableName, dataObject, dataFormattingRules, keyName){
+	/*let paramStr = "$1", paramCount = Object.keys(dataObject).length;
+
+		for (var i = 2; i <= paramCount; i++) {
+			paramStr+=",$"+i;
+		}
+
+		return query('INSERT INTO '+tableName+' ('+
+			Object.keys(dataObject).map( x => '"'+x+'"' ).join()+') VALUES ('+
+			paramStr+') RETURNING *;', Object.values(dataObject)
+		);*/
+
+		let valueNames = Object.keys(dataObject).map( x => '"'+x+'"' );
+		valueNames.unshift('"'+keyName+'"');
+
+		let values = Object.entries(dataObject).map( ([key, value]) => dataFormattingRules[key](value) );
+		values.unshift('uuid_generate_v4()');
+
+		return query('INSERT INTO '+tableName+' ('+valueNames.join()+') VALUES ('+
+			values.join()+') RETURNING *;'
+		);
+}
+
+const dateConvertor = x => "'" + _dateConvertor(x) + "'";
+const timestampConvertor = x => "'" + _timestampConvertor(x) + "'";
+const stringConvertor = x => "'" + x + "'";
+const numberConvertor = x => x;
+const booleanConvertor = x => x.toString();
+const uuidConvertor = x => '\'' + x + '\'::uuid';
+const pointConvertor = x => "(" + x.x + "," + x.y + ")";
+
+const updateFormattingRulesConversion = {};
+updateFormattingRulesConversion[dateConvertor] = stringConvertor;
+updateFormattingRulesConversion[timestampConvertor] = stringConvertor;
+updateFormattingRulesConversion[stringConvertor] = stringConvertor;
+updateFormattingRulesConversion[numberConvertor] = numberConvertor;
+updateFormattingRulesConversion[booleanConvertor] = numberConvertor;
+updateFormattingRulesConversion[uuidConvertor] = uuidConvertor;
+updateFormattingRulesConversion[pointConvertor] = numberConvertor;
+
+
+function api_update(tableName, dataObject, dataFormattingRules, dataChangeActions, keyName, keyValue) {
+	const filteredDataObjectKeys = Object.keys(dataObject)
+	.filter(key => dataFormattingRules.hasOwnProperty(key));
+
+	if(filteredDataObjectKeys.length === 0)
+		return Promise.resolve([]);
+
+	const formatedDataObject = filteredDataObjectKeys
+	.reduce((obj, key) => {
+		obj[key] = (updateFormattingRulesConversion[dataFormattingRules[key]])(dataObject[key]);
+
+		return obj;
+	}, {});
+
+	return query(
+		'SELECT * FROM '+tableName+' WHERE "'+keyName+'" = \''+keyValue+'\'::uuid;'
+	).then( res => Promise.all([
+			res,
+			query('UPDATE '+tableName+' SET '+
+				Object.entries(formatedDataObject)
+				.map( ([key,value]) => '"'+key+'" = '+value ).join()+' WHERE "'+
+				keyName+'" = \''+keyValue+'\'::uuid RETURNING *;'
+			)
+		])
+	).then(async ([prevRes,currRes]) => {
+		/*const prevVals = prevRes.rows[0];
+		const currVals = currRes.rows[0];
+
+		for(const key of filteredDataObjectKeys){
+			if(prevVals[key] != currVals[key])
+				await (dataChangeActions[key] || emptyFunction)(prevVals[key], currVals[key]);
+		}*/
+	});
+}
+function api_delete(tableName, keyName, keyValue){
+	return query('DELETE FROM '+tableName+' WHERE "'+keyName+'" = \''+keyValue+'\'::uuid;');
+}
+function api_get(tableName, keyName, keyValue) {
+	return query('SELECT * FROM '+tableName+' WHERE "'+keyName+'" = \''+keyValue+'\'::uuid;');
+}
+
+const fulltext_filter_incl = (_source, _textParam, _value) => `SELECT * FROM (${_source}) t WHERE to_tsvector('english',t."${_textParam}") @@ to_tsquery('english','${_value}')`;
+const fulltext_filter_not_incl = (_source, _textParam, _value) => `SELECT * FROM (${_source}) t WHERE NOT to_tsvector('english',t."${_textParam}") @@ to_tsquery('english','${_value}')`;
+const range_filter = (_source, _rangeParam, _rangeStart, _rangeEnd) => 
+	`SELECT * FROM (${_source}) t WHERE t."${_rangeParam}" BETWEEN ${_rangeStart} AND ${_rangeEnd}`;
+const enumeration_filter = (_source, _enumParam, _enumValues) => 
+	`SELECT * FROM (${_source}) t WHERE t."${_enumParam}" IN (${_enumValues.join()})`;
+
+const ref_table_filter = (_source, _sourceProp, _source2, _source2Prop) => 
+	`SELECT * FROM (${_source}) t1 WHERE EXISTS(SELECT "${_source2Prop}" FROM (${_source2}) t2 WHERE t1."${_sourceProp}"=t2."${_source2Prop}" )`;
+
+function parse_filters(tableName, filters){
+	let filterQuery = `SELECT * FROM ${tableName}`;
+
+	for(let i=0;i < filters.length;i++){
+		const filter = filters[i];
+
+		if(filter.id == 'text'){
+			filterQuery = fulltext_filter_incl(filterQuery, filter.param, filter.paramValue);
+		}else if(filter.id == 'notext'){
+			filterQuery = fulltext_filter_not_incl(filterQuery, filter.param, filter.paramValue);
+		}else if(filter.id == 'range'){
+			filterQuery = range_filter(filterQuery, filter.param, filter.rangeStart, filter.rangeEnd);
+		}else if(filter.id == 'enum'){
+			filterQuery = enumeration_filter(filterQuery, filter.param, filter.paramValues);
+		}else if(filter.id == 'depend'){
+			filterQuery = ref_table_filter(filterQuery, filter.paramSource, 
+				parse_filters(filter.refTableName, filter.refFilters), filter.paramRef);
+		}
+	}
+
+	return filterQuery;
+}
+
+function api_list(tableName, keyName, filters) {
+	return query('SELECT * FROM ('+parse_filters(tableName, filters)+') t ORDER BY t."'+keyName+'" ASC;');
+}
+
+
+const deleteIfNoReferers = (tableName, referersTableName, keyName, refererKeyName, keyValue) =>
+	query('DELETE FROM ' + tableName + ' WHERE "' + keyName + '" = \'' + keyValue + 
+		'\'::uuid AND NOT EXISTS(SELECT FROM ' + referersTableName + ' WHERE "' +
+		refererKeyName + '" = \'' + keyValue + '\'::uuid);');
+const nullifyReferers = (refTableName, refKeyName, keyValue) =>
+	query('UPDATE FROM '+ refTableName + ' WHERE "' + refKeyName + '" = \'' + keyValue +
+		'\'::uuid SET "' + refKeyName + '" = NULL;');
+
+function randomCharacterCode(){
+	const randomCode = Math.floor(Math.random() * (10 + 2*26));
+	return 48 + randomCode + Number(randomCode > 10)*8 + Number(randomCode > 37)*7;
+}
+
+function randomValue(type){
+	return ({
+		"string": (len = 10) => {
+			let codes = new Array(len);
+
+			for (let i = 0; i < len; i++) {
+				codes[i] = randomCharacterCode();
+			}
+
+			return String.fromCharCode(...codes);
+		},
+		"integer": () => Math.trunc(Math.random()*Number.MAX_SAFE_INTEGER),
+		"point": () => ({ x:0, y:0 }),
+		"uuid": () => "NULL",
+		"boolean": () => Math.random() >= 0.5,
+		"date": () => new Date(10000000000000 * Math.random()),
+		"timestamp without timezone": () => new Date(10000000000000 * Math.random()),
+	})[type]();
+}
+
+function getInputFormattingRule(type){
+	return ({
+		"string": stringConvertor,
+		"integer": numberConvertor,
+		"point": numberConvertor,
+		"uuid": uuidConvertor,
+		"boolean": booleanConvertor,
+		"date": stringConvertor,
+		"timestamp without timezone": stringConvertor,
+	})[type];
+}
+
+module.exports = {
+	create: api_create,
+	update: api_update,
+	delete: api_delete,
+	get: api_get,
+	list: api_list,
+
+	dateConvertor,
+	timestampConvertor,
+	stringConvertor,
+	numberConvertor,
+	booleanConvertor,
+	uuidConvertor,
+	pointConvertor,
+
+	deleteIfNoReferers,
+	nullifyReferers,
+
+	randomValue,
+	getInputFormattingRule,
+};
 ```
 
 ### Процес внесення даних та його результат
@@ -232,150 +346,58 @@ class BaseController(ABC):
 
 ![list](img/list_all.png)
 
-## Лістинги програм зі статичними та динамічними запитами пошуку
-
-`model/common.py`
-
-```python
-    def filter_items(self, cost_from: int, cost_to: int, sender_name: str = None, recipient_name: str = None):
-        query = "SELECT num, date_departure, date_arrival, shipping_cost, c1.name, " \
-                "c1.phone_number, c2.name, c2.phone_number from invoices i " \
-                "INNER JOIN contragents c1 on i.sender_ipn = c1.ipn " \
-                "INNER JOIN contragents c2 on i.recipient_ipn = c2.ipn " \
-                "WHERE " \
-                "shipping_cost::numeric BETWEEN (%(min)s) AND (%(max)s)"
-        if isinstance(sender_name, str):
-            query += " AND c1.name = (%(sender)s)"
-        if isinstance(recipient_name, str):
-            query += " AND c2.name = (%(recipient)s)"
-        self.__cursor.execute(query, {'min': cost_from, 'max': cost_to,
-                                      'sender': sender_name, 'recipient': recipient_name})
-        rows = self.__cursor.fetchall()
-        if isinstance(rows, list):
-            return rows
-        else:
-            raise Exception("There are no items")
-
-    def fulltext_search(self, query: str, including: bool):
-        if not including:
-            words = query.split()
-            if len(words) > 0:
-                words[0] = "!" + words[0]
-            counter = 1
-            while counter < len(words):
-                words[counter] = "& !" + words[counter]
-            query = ' '.join(words)
-        query_excluding = "SELECT ts_headline(description, q) " \
-                          "FROM goods, to_tsquery('english', %(query)s) AS q " \
-                          "WHERE to_tsvector('english', description) @@ q "
-        query_including = "SELECT ts_headline(description, q) " \
-                          "FROM goods, plainto_tsquery('english', %(query)s) AS q " \
-                          "WHERE to_tsvector('english', description) @@ q "
-        self.__cursor.execute(query_including if including else query_excluding, {'query': query})
-        rows = self.__cursor.fetchall()
-        if isinstance(rows, list):
-            return rows
-        else:
-            raise Exception("There are no items")
-```
-
 ## Лістинг модуля «модель» згідно із шаблоном MVC
 
-`model/__init__.py`
+`models/class-models.js`
 
-```python
-class BaseModel(ABC):
-    def __init__(self, connection, insert_query, select_query, update_query,
-                 delete_query, select_all_query, count_query, primary_key_name):
-        self._connection = connection
-        self._cursor = connection.cursor(cursor_factory=DictCursor)
-        self.__insert_query = insert_query
-        self.__select_query = select_query
-        self.__update_query = update_query
-        self.__delete_query = delete_query
-        self.__select_all_query = select_all_query
-        self.__count_query = count_query
-        self.__primary_key_name = primary_key_name
+```javascript
+const api = require('./api');
 
-    def create(self, item: object):
-        should_return_id = "returning" in self.__insert_query.lower()
-        if not self._is_valid_item_dict(item.__dict__, not should_return_id):
-            raise Exception("Item is not valid")
-        self._cursor.execute(self.__insert_query, item.__dict__)
-        self._connection.commit()
-        if should_return_id:
-            row = self._cursor.fetchone()
-            if row is not None and isinstance(row[self.__primary_key_name], int):
-                self.__insert_pk_in_item(item, row[self.__primary_key_name])
-                return item
-            else:
-                raise Exception("No rows received from DB")
+const dataFormattingRules = {
+	Name: api.stringConvertor,			// string
+	Time: api.numberConvertor,			// integer
+	Location: api.pointConvertor,		// point
+	"Teacher ID": api.uuidConvertor,	// uuid
+	"Group ID": api.uuidConvertor		// uuid
+};
 
-    def read(self, pk: int):
-        if not isinstance(pk, int):
-            raise Exception("Primary key should be an integer")
-        self._cursor.execute(self.__select_query, [pk])
-        row = self._cursor.fetchone()
-        if row is not None and self._is_valid_item_dict(row):
-            return self._get_item_from_row(row)
-        else:
-            raise Exception(f"No item with such primary key {pk} was found")
-
-    def read_all(self, offset: int = 0, limit: int = None):
-        self._cursor.execute(self.__select_all_query, {'limit': limit, 'offset': offset})
-        rows = self._cursor.fetchall()
-        if isinstance(rows, list) and all(self._is_valid_item_dict(row) for row in rows):
-            return [self._get_item_from_row(row) for row in rows]
-        else:
-            raise Exception("There are no items")
-
-    def update(self, item: object):
-        if not self._is_valid_item_dict(item.__dict__):
-            raise Exception("Item is not valid")
-        self._cursor.execute(self.__update_query, item.__dict__)
-        self._connection.commit()
-
-    def delete(self, pk: int):
-        if not isinstance(pk, int):
-            raise Exception("Primary key should be an integer")
-        self._cursor.execute(self.__delete_query, [pk])
-        self._connection.commit()
-```
-
-`model/goods.py`
-
-```python
-class Goods:
-    def __init__(self, height: int, width: int, depth: int, weight: int,
-                 invoice_num: int,  description: str = None, g_id: int = None):
-        self.id = g_id
-        self.height = height
-        self.width = width
-        self.depth = depth
-        self.weight = weight
-        self.description = description
-        self.invoice_num = invoice_num
-
-    def __str__(self):
-        return f"Goods [id={self.id}, height={self.height}, width={self.width}, depth={self.depth}, " \
-               f"weight={self.weight}, description={self.description}, invoice_num={self.invoice_num}]"
-
-
-class GoodsModel(BaseModel):
-    def __init__(self, connection):
-        insert_query = "INSERT INTO goods (height, width, depth, weight, description, invoice_num) " \
-                       "VALUES (%(height)s, %(width)s, %(depth)s, %(weight)s, %(description)s, %(invoice_num)s)" \
-                       "RETURNING id"
-        select_query = "SELECT * FROM goods WHERE id = %s"
-        update_query = "UPDATE goods SET height = %(height)s, width = %(width)s, depth = %(depth)s, " \
-                       "weight = %(weight)s, description = %(description)s, invoice_num = %(invoice_num)s " \
-                       "WHERE id = %(id)s"
-        delete_query = "DELETE FROM goods WHERE id = %s"
-        select_all_query = "SELECT * FROM goods ORDER BY id OFFSET %(offset)s LIMIT %(limit)s"
-        count_query = "SELECT COUNT(*) FROM goods"
-        primary_key_name = "id"
-        super().__init__(connection, insert_query, select_query, update_query,
-                         delete_query, select_all_query, count_query, primary_key_name)
+module.exports = {
+	create: function(paramValues){
+		return api.create('public."TheClasses"', paramValues, dataFormattingRules, 'ID');
+	},
+	update: function(id, properties){
+		return api.update('public."TheClasses"', properties, dataFormattingRules, {}, 'ID', id);
+	},
+	delete: function(id){
+		return api.delete('public."TheClasses"', 'ID', id);
+	},
+	get: function(id){
+		return api.get('public."TheClasses"', 'ID', id).then((res) => res.rows[0]);
+	},
+	list: function(filters){
+		return api.list('public."TheClasses"', 'ID', filters).then((res) => res.rows);
+	},
+	toString: () => "Class",
+	getProperties: () => ["Name", "Time", "Location", "Teacher ID", "Group ID"],
+	getPropertyTypes: () => ["string", "integer", "point", "uuid", "uuid"],
+	getReferences: () => [
+		{
+			paramSource: "Teacher ID",
+			paramRef: "ID",
+			refTableName: "public.\"Teachers\""
+		},
+		{
+			paramSource: "Group ID",
+			paramRef: "ID",
+			refTableName: "public.\"Groups\""
+		},
+		{ // from journal entry
+			paramSource: "ID",
+			paramRef: "Class_ID",
+			refTableName: "public.\"Journal Entries\""
+		},
+	],
+};
 ```
 
 ## Скріншоти результатів виконання операції вилучення запису батьківської таблиці та виведення вмісту дочірньої таблиці після цього вилучення, а якщо воно неможливе, то результат перехоплення помилки з виведенням повідомлення про неможливість видалення за наявності залежних даних
