@@ -1,0 +1,27 @@
+{
+  "name": "lab2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "build/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "commonjs",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "test": "cd test && npm run test"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "moment": "^2.24.0",
+    "node-uuid": "^1.4.8",
+    "pg": "^7.14.0",
+    "reflect-metadata": "^0.1.13",
+    "typeorm": "^0.2.20"
+  },
+  "devDependencies": {
+    "@types/node": "^12.12.11",
+    "ts-node": "^8.5.2",
+    "typescript": "^3.7.2"
+  }
+}

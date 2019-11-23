@@ -14,7 +14,7 @@ module.exports = {
 	},
 	delete: function(id){
 		return api.delete('public."Groups"', 'ID', id).then(
-			() => api.delete('public."TheClasses"', 'ID', id)
+			() => api.delete('public."TheClasses"', 'Group ID', id)
 		).then(
 			() => api.nullifyReferers('public."Students"', 'Group_ID', id)
 		);
