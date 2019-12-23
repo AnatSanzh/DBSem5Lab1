@@ -38,7 +38,7 @@ Explain analyze SELECT * FROM public.journal_entries t WHERE t."Date" BETWEEN '2
 ### При додаванні/оновленні студентів в базі даних, оновлюється поли, призначене для індексування
 
 ![lab](img/beforeupdate.png)  
-![lab](img/updationg.png)  
+![lab](img/updating.png)  
 ![lab](img/afterupdate.png)  
 
 ## Завдання №4: скріншоти з ходом виконання запитів та їх результатів у обох транзакціях по кожному рівню ізоляції
