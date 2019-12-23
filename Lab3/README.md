@@ -55,16 +55,16 @@ Explain analyze SELECT * FROM public.journal_entries t WHERE t."Date" BETWEEN '2
             <pre lang="sql">
 -- #1
 BEGIN TRANSACTION ISOLATION LEVEL READ COMMITTED;
-SELECT name FROM "Doctor" WHERE id = 6;
+SELECT "Name" FROM public.students WHERE "Student_ID" = '0002b532-9e6e-4de9-9a87-06db47e9d83a'::uuid;
 -- #2
 <br>
 <br>
 -- #3
-SELECT name FROM "Doctor" WHERE id = 6;
+SELECT "Name" FROM public.students WHERE "Student_ID" = '0002b532-9e6e-4de9-9a87-06db47e9d83a'::uuid;
 -- #4
 <br>
 -- #5
-SELECT name FROM "Doctor" WHERE id = 6;
+SELECT "Name" FROM public.students WHERE "Student_ID" = '0002b532-9e6e-4de9-9a87-06db47e9d83a'::uuid;
             </pre>
         </td>
         <td>
@@ -74,7 +74,7 @@ SELECT name FROM "Doctor" WHERE id = 6;
 <br>
 -- #2
 BEGIN TRANSACTION ISOLATION LEVEL READ COMMITTED;
-UPDATE "Doctor" SET name = 'Bogdan' WHERE id = 6;
+UPDATE public.students SET "Name" = 'Bogdan' WHERE "Student_ID" = '0002b532-9e6e-4de9-9a87-06db47e9d83a'::uuid;
 -- #3
 <br>
 -- #4
@@ -106,16 +106,16 @@ COMMIT;
             <pre lang="sql">
 -- #1
 BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ;
-SELECT name FROM "Doctor" WHERE id = 6;
+SELECT "Name" FROM public.students WHERE "Student_ID" = '0002b532-9e6e-4de9-9a87-06db47e9d83a'::uuid;
 -- #2
 <br>
 <br>
 <br>
 -- #3
-SELECT name FROM "Doctor" WHERE id = 6;
+SELECT "Name" FROM public.students WHERE "Student_ID" = '0002b532-9e6e-4de9-9a87-06db47e9d83a'::uuid;
 -- #4
 COMMIT;
-SELECT name FROM "Doctor" WHERE id = 6;
+SELECT "Name" FROM public.students WHERE "Student_ID" = '0002b532-9e6e-4de9-9a87-06db47e9d83a'::uuid;
             </pre>
         </td>
         <td>
@@ -125,7 +125,7 @@ SELECT name FROM "Doctor" WHERE id = 6;
 <br>
 -- #2
 BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ;
-UPDATE "Doctor" SET name = 'Andrii' WHERE id = 6;
+UPDATE public.students SET "Name" = 'Andrii' WHERE "Student_ID" = '0002b532-9e6e-4de9-9a87-06db47e9d83a'::uuid;
 COMMIT;
 -- #3
 <br>
@@ -156,17 +156,17 @@ COMMIT;
             <pre lang="sql">
 -- #1
 BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE;
-SELECT COUNT(*) FROM "Doctor";
+SELECT COUNT(*) FROM public.students;
 -- #2
 <br>
 <br>
 <br>
 <br>
 -- #3
-SELECT COUNT(*) FROM "Doctor";
+SELECT COUNT(*) FROM public.students;
 -- #4
 COMMIT;
-SELECT COUNT(*) FROM "Doctor";
+SELECT COUNT(*) FROM public.students;
             </pre>
         </td>
         <td>
@@ -176,8 +176,8 @@ SELECT COUNT(*) FROM "Doctor";
 <br>
 -- #2
 BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE;
-INSERT INTO "Doctor" (name, surname, speciality, qualification, 
-	clinic_id) VALUES ('Ihor', 'Vens', 'Surgeon', 'Master', null);
+INSERT INTO public.students ("Name", "Privileges", "Last Location", "Password", 
+	"Last Location Time") VALUES ('Ihor', false, '(333,333)', 'wd', '2006-12-23 22:31:52');
 COMMIT;
 -- #3
 <br>
