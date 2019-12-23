@@ -92,11 +92,11 @@ COMMIT;
 
 | Transaction #1      | Transaction #2      |
 |---------------------|---------------------|
-| ![lab](screens/rc1.png) |                     |
-|                     | ![lab](screens/rc2.png) |
-| ![lab](screens/rc3.png) |                     |
-|                     | ![lab](screens/rc4.png) |
-| ![lab](screens/rc5.png) |                     |
+| ![lab](img/IsoLev1_1.png) |                     |
+|                     | ![lab](img/IsoLev1_2.png) |
+| ![lab](img/IsoLev1_3.png) |                     |
+|                     | ![lab](img/IsoLev1_4.png) |
+| ![lab](img/IsoLev1_5.png) |                     |
 
 ### REPEATABLE READ
 
@@ -147,10 +147,10 @@ COMMIT;
 
 | Transaction #1      | Transaction #2      |
 |---------------------|---------------------|
-| ![lab](screens/rr1.png) |                     |
-|                     | ![lab](screens/rr2.png) |
-| ![lab](screens/rr3.png) |                     |
-| ![lab](screens/rr4.png) |                     |
+| ![lab](img/IsoLev2_1.png) |                     |
+|                     | ![lab](img/IsoLev2_2.png) |
+| ![lab](img/IsoLev2_3.png) |                     |
+| ![lab](img/IsoLev2_4.png) |                     |
 
 ### SERIALIZABLE
 
@@ -200,7 +200,7 @@ COMMIT;
 
 | Transaction #1      | Transaction #2      |
 |---------------------|---------------------|
-| ![lab](screens/sz1.png)  |                     |
-|                     | ![lab](screens/sz2.png)  |
-| ![lab](screens/sz3.png)  |                     |
-| ![lab](screens/sz4.png)  |                     |
+| ![lab](img/IsoLev3_1.png)  |                     |
+|                     | ![lab](img/IsoLev3_2.png)  |
+| ![lab](img/IsoLev3_3.png)  |                     |
+| ![lab](img/IsoLev3_4.png)  |                     |
