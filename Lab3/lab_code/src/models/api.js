@@ -43,7 +43,7 @@ function randomValue(type){
 	return ({
 		"string": (len = 10) => String.fromCharCode(...Array.from({length: 40}, () => 48 + Math.floor(Math.random() * 60))),
 		"integer": () => Math.trunc(Math.random()*Number.MAX_SAFE_INTEGER),
-		"point": () => ({ x: 0, y:0 }),
+		"point": () => ('(0,0)'/*{ x: 0, y:0 }*/),
 		"uuid": () => null,
 		"boolean": () => Math.random() >= 0.5,
 		"date": () => new Date(10000000000000 * Math.random()),
