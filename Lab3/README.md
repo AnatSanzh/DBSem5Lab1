@@ -55,16 +55,19 @@ Explain analyze SELECT * FROM public.journal_entries t WHERE t."Date" BETWEEN '2
             <pre lang="sql">
 -- #1
 BEGIN TRANSACTION ISOLATION LEVEL READ COMMITTED;
-SELECT "Name" FROM public.students WHERE "Student_ID" = '0002b532-9e6e-4de9-9a87-06db47e9d83a'::uuid;
+SELECT "Name" FROM public.students WHERE 
+"Student_ID" = '0002b532-9e6e-4de9-9a87-06db47e9d83a'::uuid;
 -- #2
 <br>
 <br>
 -- #3
-SELECT "Name" FROM public.students WHERE "Student_ID" = '0002b532-9e6e-4de9-9a87-06db47e9d83a'::uuid;
+SELECT "Name" FROM public.students WHERE 
+"Student_ID" = '0002b532-9e6e-4de9-9a87-06db47e9d83a'::uuid;
 -- #4
 <br>
 -- #5
-SELECT "Name" FROM public.students WHERE "Student_ID" = '0002b532-9e6e-4de9-9a87-06db47e9d83a'::uuid;
+SELECT "Name" FROM public.students WHERE 
+"Student_ID" = '0002b532-9e6e-4de9-9a87-06db47e9d83a'::uuid;
             </pre>
         </td>
         <td>
@@ -74,7 +77,8 @@ SELECT "Name" FROM public.students WHERE "Student_ID" = '0002b532-9e6e-4de9-9a87
 <br>
 -- #2
 BEGIN TRANSACTION ISOLATION LEVEL READ COMMITTED;
-UPDATE public.students SET "Name" = 'Bogdan' WHERE "Student_ID" = '0002b532-9e6e-4de9-9a87-06db47e9d83a'::uuid;
+UPDATE public.students SET "Name" = 'Bogdan' WHERE 
+"Student_ID" = '0002b532-9e6e-4de9-9a87-06db47e9d83a'::uuid;
 -- #3
 <br>
 -- #4
@@ -106,16 +110,19 @@ COMMIT;
             <pre lang="sql">
 -- #1
 BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ;
-SELECT "Name" FROM public.students WHERE "Student_ID" = '0002b532-9e6e-4de9-9a87-06db47e9d83a'::uuid;
+SELECT "Name" FROM public.students WHERE 
+"Student_ID" = '0002b532-9e6e-4de9-9a87-06db47e9d83a'::uuid;
 -- #2
 <br>
 <br>
 <br>
 -- #3
-SELECT "Name" FROM public.students WHERE "Student_ID" = '0002b532-9e6e-4de9-9a87-06db47e9d83a'::uuid;
+SELECT "Name" FROM public.students WHERE 
+"Student_ID" = '0002b532-9e6e-4de9-9a87-06db47e9d83a'::uuid;
 -- #4
 COMMIT;
-SELECT "Name" FROM public.students WHERE "Student_ID" = '0002b532-9e6e-4de9-9a87-06db47e9d83a'::uuid;
+SELECT "Name" FROM public.students WHERE 
+"Student_ID" = '0002b532-9e6e-4de9-9a87-06db47e9d83a'::uuid;
             </pre>
         </td>
         <td>
@@ -125,7 +132,8 @@ SELECT "Name" FROM public.students WHERE "Student_ID" = '0002b532-9e6e-4de9-9a87
 <br>
 -- #2
 BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ;
-UPDATE public.students SET "Name" = 'Andrii' WHERE "Student_ID" = '0002b532-9e6e-4de9-9a87-06db47e9d83a'::uuid;
+UPDATE public.students SET "Name" = 'Andrii' WHERE 
+"Student_ID" = '0002b532-9e6e-4de9-9a87-06db47e9d83a'::uuid;
 COMMIT;
 -- #3
 <br>
@@ -176,8 +184,9 @@ SELECT COUNT(*) FROM public.students;
 <br>
 -- #2
 BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE;
-INSERT INTO public.students ("Name", "Privileges", "Last Location", "Password", 
-	"Last Location Time") VALUES ('Ihor', false, '(333,333)', 'wd', '2006-12-23 22:31:52');
+INSERT INTO public.students ("Name", "Privileges", 
+"Last Location", "Password", "Last Location Time") VALUES 
+('Ihor', false, '(333,333)', 'wd', '2006-12-23 22:31:52');
 COMMIT;
 -- #3
 <br>
